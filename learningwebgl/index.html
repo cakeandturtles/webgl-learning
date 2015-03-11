@@ -1,0 +1,106 @@
+<!doctype html>
+<head></head>
+<body>
+<center><canvas width="500" height="500" id="mainCanvas"></canvas>
+<br/>
+<a href="index2.html">Part 2 (Triangle & Square)</a>
+<br/>
+<a href="http://my2iu.blogspot.com/2011/11/webgl-pre-tutorial-part-1.html">Web GL Pre tutorial</a>
+</center>
+<script>
+function main(){
+	var gl;
+	var canvas = document.getElementById("mainCanvas");
+	try{
+		gl = canvas.getContext('experimental-webgl');
+	}catch(e){
+		throw new Error("no WebGL found");
+	}
+	
+	//specify the triangle vertices
+	var vertices = [ 
+		0.0, 0.5,
+		0.5, -0.5,
+		-0.5, -0.5
+	];
+	//--------------------------------------GPU BUFFER DEFINITION
+	//set aside memory in GPU for data
+	var buffer = gl.createBuffer();	
+	//specify that we want "buffer" to be something we want to manipulate in the GPU
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer); 
+	//copy the triangle data to the currently selected GPU buffer
+	//Float32Array tells the GPU we want the triangle data to be stored as consecutive 32-bit floating point numbers
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+	
+	//-------------------------------------GPU VERTEX SHADER DEFINITION
+	//A vertex shader is used to reduce the amount of communication between the CPU and the GPU. That is, after copying the vertices over to the GPU, we define this vertex shader program that will tell the GPU how to move the model of our vertices if necessary (so that we don't have to move the vertices on the CPU and send the whole update vertices/model back to the GPU, which is much slower
+	//for every vertex, the vertex shader returns four numbers describing the vertex (x, y, z, w)
+	//define the vertex shader program (as a string
+	var vertCode = 
+		//specify the variable coordinate, which we will give to the GPU
+		'attribute vec2 coordinates;' +
+		'void main(void) {' +
+			//coordinates are (x, y), but also need  to specify z (0.0) and w (1.0)
+			//w is normally 1.0
+		'	gl_Position = vec4(coordinates, 0.0, 1.0);' +
+		'}';
+	//similar process to creating the buffer above
+	var vertShader = gl.createShader(gl.VERTEX_SHADER);
+	//attach code to the shader
+	gl.shaderSource(vertShader, vertCode);
+	//compile the code into the gpu
+	gl.compileShader(vertShader);
+	//check if it was compiled correctly
+	if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
+		throw new Error(gl.getShaderInfoLog(vertShader));
+		
+	//-----------------------------------GPU FRAGMENT SHADER DEFINITION
+	//A fragment shader is a small program that will be run for every pixel on the triangle to calculate what color that pixel should be.
+	//For each pixel, a fragment shader returns four numbers describing the colour (r, g, b, a)
+	var fragCode =
+		'void main(void) {' +
+		'	gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);' +
+		'}';
+	//basically same compilation process as vertex shader
+	var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+	gl.shaderSource(fragShader, fragCode);
+	gl.compileShader(fragShader);
+	if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
+		throw new Error(gl.getShaderInfoLog(fragShader));
+		
+	//-----------------------GPU COMBINE SHADERS INTO SINGLE DRAWING PROGRAM
+	var shaderProgram = gl.createProgram();
+	gl.attachShader(shaderProgram, vertShader);
+	gl.attachShader(shaderProgram, fragShader);
+	gl.linkProgram(shaderProgram);
+	if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
+		throw new Error(gl.getProgramInfoLog(shaderProgram));
+		
+		
+	//clear drawing surface to black!!!
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	
+	//specify which shader program to use for drawing
+	gl.useProgram(shaderProgram);
+	
+	//get a handle for the GPU variable (coordinates)
+	var coordinatesVar = gl.getAttribLocation(shaderProgram, "coordinates");
+	//Configure the variable (allow it to be used)
+	gl.enableVertexAttribArray(coordinatesVar);
+	//Select our buffer of data
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+	//specify that this buffer should be divided into groups of
+	//2, floating point numbers,
+	//and that these numbers should be fed into the shader program as the "coordinates" variable
+	gl.vertexAttribPointer(coordinatesVar, 2, gl.FLOAT, false, 0, 0);
+	
+	//Finally, tell webGL to draw something
+	//ues gl.TRANGLES to draw the THREE points in our array as a triangle
+	gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+window.onload = main;
+</script>
+</body>
+</html>

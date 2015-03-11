@@ -1,0 +1,192 @@
+<html>
+<head>
+	<title>Triangle & Square (learningwebgl.com)</title>
+	<script type='text/javascript' src="glMatrix-0.9.5.min.js"></script>
+	
+	<script id="shader-fs" type="x-shader/x-fragment">
+		precision mediump float;
+		void main(void){
+			gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+		}
+	</script>
+	
+	<script id="shader-vs" type="x-shader/x-vertex">
+		attribute vec3 aVertexPosition;
+		
+		uniform mat4 uMVMatrix;
+		uniform mat4 uPMatrix;
+		
+		void main(void){
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+		}
+	</script>
+	
+	<script type="text/javascript">
+		var gl;
+		function initGL(canvas){
+			try{
+				gl = canvas.getContext("experimental-webgl");
+				gl.viewportWidth = canvas.width;
+				gl.viewportHeight = canvas.height;
+			}catch(e){
+			}
+			if (!gl){
+				alert("Could not initialise WebGL, sorry :-(");
+			}
+		}
+		
+		function getShader(gl, id){
+			var shaderScript = document.getElementById(id);
+			if (!shaderScript){
+				return null;
+			}
+			
+			var str = '';
+			var k = shaderScript.firstChild;
+			while (k){
+				if (k.nodeType == 3){
+					str += k.textContent;
+				}
+				k = k.nextSibling;
+			}
+			
+			var shader;
+			if (shaderScript.type == 'x-shader/x-fragment'){
+				shader = gl.createShader(gl.FRAGMENT_SHADER);
+			}else if (shaderScript.type == 'x-shader/x-vertex'){
+				shader = gl.createShader(gl.VERTEX_SHADER);
+			}else{
+				return null;
+			}
+			
+			gl.shaderSource(shader, str);
+			gl.compileShader(shader);
+			
+			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+				alert(gl.getShaderInfoLog(shader));
+				return null;
+			}
+			
+			return shader;
+		}
+		
+		var shaderProgram;
+		
+		function initShaders(){
+			var fragmentShader = getShader(gl, "shader-fs");
+			var vertexShader = getShader(gl, "shader-vs");
+			
+			shaderProgram = gl.createProgram();
+			gl.attachShader(shaderProgram, vertexShader);
+			gl.attachShader(shaderProgram, fragmentShader);
+			gl.linkProgram(shaderProgram);
+			
+			if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)){
+				alert("Could not initialise shaders");
+			}
+			
+			gl.useProgram(shaderProgram);
+			
+			shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+			gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+			
+			shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+			shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+		}
+		
+		var mvMatrix = mat4.create();
+		var pMatrix = mat4.create();
+		
+		function setMatrixUniforms(){
+			gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+			gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+		}
+		
+		var triangleVertexPositionBuffer;
+		var squareVertexPositionBuffer;
+		
+		function initBuffers(){
+			//create the triangle buffer!!
+			triangleVertexPositionBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+			var vertices = [
+				0.0, 1.0, 0.0,
+				-1.0, -1.0, 0.0,
+				1.0, -1.0, 0.0
+			];
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+			triangleVertexPositionBuffer.itemSize = 3;
+			triangleVertexPositionBuffer.numItems = 3;
+			
+			//create the square buffer!!
+			squareVertexPositionBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+			vertices = [
+				1.0, 1.0, 0.0,
+				-1.0, 1.0, 0.0,
+				1.0, -1.0, 0.0,
+				-1.0, -1.0, 0.0
+			];
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+			squareVertexPositionBuffer.itemSize = 3;
+			squareVertexPositionBuffer.numItems = 4;
+		}
+		
+		function drawScene(){
+			gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+			//gl.DEPTH_BUFFER_BIT is used so objects in front of other objects will hide the objects they are in front of?
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			
+			//Set the perspective of the scene (45degrees, ???, don't show items closer than 0.1 units from view, don't show items farther than 100.0 units from view, set it to projection matrix (pMatrix)
+			mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+			
+			//set the model-view Matrix to the identity matrix
+			//model-view Matrix (mvMatrix) will be used to move models around (in this case our triangle and square)
+			mat4.identity(mvMatrix);
+			
+			//Move mvMatrix 1.5 to the left (x = -1.5), 0 vertically (y = 0.0), and 7.0 away from us (z = -7.0)
+			mat4.translate(mvMatrix, [-1.5, 0.0, -7.0]);
+			//specifying that the current buffer we want to use is the triangle
+			gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+			//tell GPU to treat triangle vertices as floats with 3 (triangle.itemSize) coordinates per point.
+			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			//use this to send the pMatrix and mvMatrix to the GPU
+			setMatrixUniforms();
+			//draw the vertices as a triangle
+			gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+			
+			//move mvMatrix 3 to the right from its current position
+			//(ends up at x = 1.5, y = 0.0, z = -7.0
+			mat4.translate(mvMatrix, [3.0, 0.0, 0.0]);
+			gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+			gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			setMatrixUniforms();
+			//draw the square with gl.TRIANGLE_STRIP (first three points specify a triangle to draw, additional point uses previous two points as the base for the next triangle and itself as the third point for the new triangle, easy to simulate drawing a square
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+		}
+		
+		function webGLStart(){
+			var canvas = document.getElementById("lesson01-canvas");
+			initGL(canvas);
+			initShaders();
+			initBuffers();
+			
+			gl.clearColor(0.0, 0.0, 0.0, 1.0);
+			//used so objects in front of other objects will hide the objects they are in front of?
+			gl.enable(gl.DEPTH_TEST);
+			
+			drawScene();
+		}
+		window.onload = webGLStart;
+	</script>
+</head>
+<body>
+	<center>
+		<canvas id="lesson01-canvas" style="border: none;" width="500" height="500"></canvas>
+		<br/>
+		<a href="index3.html">Part 3 (Color)</a>
+		<br/>
+		<a href="http://learningwebgl.com/blog/?p=28">Learning Web GL Lesson 1</a>
+	</center>
+</body>
+</html>

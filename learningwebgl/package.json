@@ -1,0 +1,17 @@
+{
+	"name": "web gl test",
+	"version": "2.0.1",
+	"description": "testing webgl performance with nodewebkit",
+	"main": "index.html",
+	"window": {
+		"title": "web gl test",
+		"icon": "mud.gif",
+		"toolbar": true,
+		"width": 643,
+		"min_width": 643,
+		"max_width": 643,
+		"height": 522,
+		"min_height": 522,
+		"max_height": 522
+	}
+}

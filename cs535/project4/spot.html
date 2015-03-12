@@ -7,39 +7,6 @@
 <script type="text/javascript" src="../Common/MV.js"></script>
 <script type="text/javascript" src="spot.js"></script>
 
-<script id="per-fragment-lighting-fs" type="x-shader/x-fragment">
-    precision mediump float;
-
-    varying vec3 vTransformedNormal;
-    varying vec4 vPosition;
-
-    uniform bool uUseLighting;
-
-    uniform vec3 uAmbientColor;
-
-    uniform vec3 uPointLightingLocation;
-    uniform vec3 uPointLightingColor;
-
-    uniform sampler2D uSampler;
-
-
-    void main(void) {
-        vec3 lightWeighting;
-        if (!uUseLighting) {
-            lightWeighting = vec3(1.0, 1.0, 1.0);
-        } else {
-            vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
-
-			float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
-            lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
-        }
-
-        vec4 fragmentColor;
-        fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
-        gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
-    }
-</script>
-
 <script id="per-fragment-lighting-vs" type="x-shader/x-vertex">
     attribute vec3 aVertexPosition;
     attribute vec3 aVertexNormal;
@@ -51,11 +18,47 @@
     varying vec3 vTransformedNormal;
     varying vec4 vPosition;
 
-
     void main(void) {
         vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
         gl_Position = uPMatrix * vPosition;
         vTransformedNormal = uNMatrix * aVertexNormal;
+    }
+</script>
+
+<script id="per-fragment-lighting-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec3 vTransformedNormal;
+    varying vec4 vPosition;
+
+    uniform bool uUseLighting;
+
+    uniform vec3 uAmbientColor;
+
+	uniform vec3 uPointLightingEye;
+    uniform vec3 uPointLightingAt;
+    uniform vec3 uPointLightingColor;
+	uniform float uPointLightingAngle;
+
+    uniform sampler2D uSampler;
+
+
+    void main(void) {
+        vec3 lightWeighting;
+		vec3 lightDirection;
+        if (!uUseLighting) {
+            lightWeighting = vec3(1.0, 1.0, 1.0);
+        } else {
+            lightDirection = normalize(uPointLightingAt-vPosition.xyz);
+
+			float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
+            //lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
+			lightWeighting = vec3(1.0, 1.0, 1.0) * directionalLightWeighting;
+        }
+
+        vec4 fragmentColor;
+        fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
     }
 </script>
 
@@ -69,15 +72,9 @@
     <input type="checkbox" id="lighting" checked /> Use lighting<br/>
     <br/>
 
-    <h2>Point light:</h2>
+    <h2>Spot light:</h2>
 
     <table style="border: 0; padding: 10px;">
-        <tr>
-            <td><b>Location:</b>
-            <td>X: <input type="text" id="lightPositionX" value="0.0" />
-            <td>Y: <input type="text" id="lightPositionY" value="0.5" />
-            <td>Z: <input type="text" id="lightPositionZ" value="-0.5" />
-        </tr>
         <tr>
             <td><b>Colour:</b>
             <td>R: <input type="text" id="pointR" value="0.8" />

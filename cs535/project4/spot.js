@@ -76,7 +76,7 @@ function createProgram(fragmentShaderID, vertexShaderID) {
 	program.samplerUniform = gl.getUniformLocation(program, "uSampler");
 	program.useLightingUniform = gl.getUniformLocation(program, "uUseLighting");
 	program.ambientColorUniform = gl.getUniformLocation(program, "uAmbientColor");
-	program.pointLightingLocationUniform = gl.getUniformLocation(program, "uPointLightingLocation");
+	program.pointLightingAtUniform = gl.getUniformLocation(program, "uPointLightingAt");
 	program.pointLightingColorUniform = gl.getUniformLocation(program, "uPointLightingColor");
 
 	return program;
@@ -146,12 +146,6 @@ function initBuffers() {
 		 1.0,  0.5, -1.0,
 		 1.0, 0.0, -1.0,
 
-		// Top face
-		/*-1.0,  1.0, -1.0,
-		-1.0,  1.0,  1.0,
-		 1.0,  1.0,  1.0,
-		 1.0,  1.0, -1.0,*/
-
 		// Bottom face
 		-1.0, 0.0, -1.0,
 		 1.0, 0.0, -1.0,
@@ -178,40 +172,34 @@ function initBuffers() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
 	var vertexNormals = [
 		// Front face
-		 0.0,  0.0,  1.0,
-		 0.0,  0.0,  1.0,
-		 0.0,  0.0,  1.0,
-		 0.0,  0.0,  1.0,
+		 0.0,  0.0,  -1.0,
+		 0.0,  0.0, -1.0,
+		 0.0,  0.0,  -1.0,
+		 0.0,  0.0,  -1.0,
 
 		// Back face
-		 0.0,  0.0, -1.0,
-		 0.0,  0.0, -1.0,
-		 0.0,  0.0, -1.0,
-		 0.0,  0.0, -1.0,
-
-		// Top face
-		 /*0.0,  1.0,  0.0,
-		 0.0,  1.0,  0.0,
-		 0.0,  1.0,  0.0,
-		 0.0,  1.0,  0.0,*/
+		 0.0,  0.0, 1.0,
+		 0.0,  0.0, 1.0,
+		 0.0,  0.0, 1.0,
+		 0.0,  0.0, 1.0,
 
 		// Bottom face
-		 0.0, -1.0,  0.0,
-		 0.0, -1.0,  0.0,
-		 0.0, -1.0,  0.0,
-		 0.0, -1.0,  0.0,
+		 0.0, 1.0,  0.0,
+		 0.0, 1.0,  0.0,
+		 0.0, 1.0,  0.0,
+		 0.0, 1.0,  0.0,
 
 		// Right face
-		 1.0,  0.0,  0.0,
-		 1.0,  0.0,  0.0,
-		 1.0,  0.0,  0.0,
-		 1.0,  0.0,  0.0,
+		 -1.0,  0.0,  0.0,
+		 -1.0,  0.0,  0.0,
+		 -1.0,  0.0,  0.0,
+		 -1.0,  0.0,  0.0,
 
 		// Left face
-		-1.0,  0.0,  0.0,
-		-1.0,  0.0,  0.0,
-		-1.0,  0.0,  0.0,
-		-1.0,  0.0,  0.0,
+		1.0,  0.0,  0.0,
+		1.0,  0.0,  0.0,
+		1.0,  0.0,  0.0,
+		1.0,  0.0,  0.0,
 	];
 	
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
@@ -238,22 +226,14 @@ var atx = 0.0, aty = 0.0, atz = -99999;
 var eye = [eyex, eyey, eyez];
 var at = [atx, aty, atz];
 var up = [0.0, 1.0, 0.0];
+var lightAtX = 0.0;
+var lightAtY = 0.25;
+var lightAtZ = 0.0;
+var lightEyeX = 0.0;
+var lightEyeY = 0.75;
+var lightEyeZ = 0.0;
+var lightAngle = 10; //degrees
 
-function moveEyeBy(x, y, z){
-	eyex += x;
-	eyey += y;
-	eyez += z;
-	
-	var lightX = parseFloat(document.getElementById("lightPositionX").value);
-	var lightY = parseFloat(document.getElementById("lightPositionY").value);
-	var lightZ = parseFloat(document.getElementById("lightPositionZ").value);
-	lightX -= x;
-	lightY -= y;
-	lightZ -= z;
-	document.getElementById("lightPositionX").value = lightX;
-	document.getElementById("lightPositionY").value = lightY;
-	document.getElementById("lightPositionZ").value = lightZ;
-}
 
 function viewLeft(){
 	viewpoint_index--;
@@ -265,7 +245,7 @@ function viewLeft(){
 
 function viewRight(){
 	viewpoint_index++;
-	if (viewpoint_index > 6){
+	if (viewpoint_index > 7){
 		viewpoint_index = 0;
 	}
 	setViewpoint();
@@ -280,40 +260,38 @@ function setViewpoint(){
 			eyex = 0.0;
 			break;
 		case 1:
-			eyez = 0.35;
-			eyex = 0.35;
+			eyez = 0.5;
+			eyex = 0.5;
 			break;
 		case 2:
 			eyez = 0.0;
 			eyex = 0.5;
 			break;
 		case 3:
-			eyez = -0.35;
-			eyex = 0.35;
+			eyez = -0.5;
+			eyex = 0.5;
 			break;
 		case 4:
 			eyez = -0.5;
 			eyex = 0.0;
 			break;
 		case 5:
-			eyez = -0.35;
-			eyex = -0.35;
+			eyez = -0.5;
+			eyex = -0.5;
 			break;
 		case 6:
 			eyez = 0.0;
 			eyex = -0.5;
 			break;
 		case 7:
-			eyez = -0.35;
-			eyex = -0.35;
+			eyez = -0.5;
+			eyex = -0.5;
 			break;
 	}
 	atx = -eyex;
 	atz = -eyez;
 }
 
-//for debugging the lookAt vs normal modelView matrix
-var identitize = false;
 function drawScene() {
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -329,23 +307,12 @@ function drawScene() {
 	var at = [atx, aty, atz];
 	var up = [0.0, 1.0, 0.0];
 	mvMatrix = lookAt(eye, at, up);
-	
-	var lightX = parseFloat(document.getElementById("lightPositionX").value);
-	var lightY = parseFloat(document.getElementById("lightPositionY").value);
-	var lightZ = parseFloat(document.getElementById("lightPositionZ").value);
-	var lightPosition = mat3();
-	lightPosition[0][0] = lightX;
-	lightPosition[1][1] = lightY;
-	lightPosition[2][2] = lightZ;
-	//now move them relative to the mvMatrix so that 
-	
-	lightX = lightPosition[0][0];
-	lightY = lightPosition[1][1];
-	lightZ = lightPosition[2][2];
 
 	var lighting = document.getElementById("lighting").checked;
 	gl.uniform1i(currentProgram.useLightingUniform, lighting);
 	if (lighting) {
+		var lightAt = [lightAtX, lightAtY, lightAtZ];
+		
 		gl.uniform3f(
 			currentProgram.ambientColorUniform,
 			parseFloat(document.getElementById("ambientR").value),
@@ -354,7 +321,12 @@ function drawScene() {
 		);
 
 		gl.uniform3f(
-			currentProgram.pointLightingLocationUniform, lightX, lightY, lightZ
+			currentProgram.pointLightingAtUniform, lightAt[0], lightAt[1], lightAt[2]
+		);
+		
+		gl.uniform3f(
+			gl.getUniformLocation(currentProgram, "uPointLightingEye"),
+			lightEyeX, lightEyeY, lightEyeZ
 		);
 
 		gl.uniform3f(
@@ -366,7 +338,6 @@ function drawScene() {
 	}
 
 	mvPushMatrix();
-	if (identitize) mvMatrix = mat4();
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 	gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -403,7 +374,17 @@ function webGLStart() {
 }
 
 //matrix utility function
-var Mat4toInverseMat3 = function(m4,m3){
+function vector3Matrix3Mult(v3, m3){
+	var result = [0, 0, 0];
+	for (var i = 0; i < 3; i++){
+		for (var j = 0; j < 3; j++){
+			result[i] += v3[j]*m3[j][i];
+		}
+	}
+	return result;
+}
+
+function Mat4toInverseMat3(m4,m3){
 	var m00 = m4[0][0], 
 		m01 = m4[0][1], 
 		m02 = m4[0][2], 

@@ -232,20 +232,28 @@ function initBuffers() {
 	cubeVertexIndexBuffer.numItems = cubeVertexIndices.length;
 }
 
-var cubeAngle = 45;
-var cubeanglex = 0;
-var cubeangley = 1;
-var cubeanglez = 0;
-var zoomx = 0;
-var zoomy = -0.5;
-var zoomz = -1;
-
 var viewpoint_index = 0;
-var eyex = 0.0, eyey = 0.75, eyez = 0.5;
-var atx = 0.0, aty = 0.25, atz = -0.5;
+var eyex = 0.0, eyey = 0.0, eyez = 0.0;
+var atx = 0.0, aty = 0.0, atz = -99999;
 var eye = [eyex, eyey, eyez];
 var at = [atx, aty, atz];
 var up = [0.0, 1.0, 0.0];
+
+function moveEyeBy(x, y, z){
+	eyex += x;
+	eyey += y;
+	eyez += z;
+	
+	var lightX = parseFloat(document.getElementById("lightPositionX").value);
+	var lightY = parseFloat(document.getElementById("lightPositionY").value);
+	var lightZ = parseFloat(document.getElementById("lightPositionZ").value);
+	lightX -= x;
+	lightY -= y;
+	lightZ -= z;
+	document.getElementById("lightPositionX").value = lightX;
+	document.getElementById("lightPositionY").value = lightY;
+	document.getElementById("lightPositionZ").value = lightZ;
+}
 
 function viewLeft(){
 	viewpoint_index--;
@@ -304,6 +312,8 @@ function setViewpoint(){
 	atz = -eyez;
 }
 
+//for debugging the lookAt vs normal modelView matrix
+var identitize = false;
 function drawScene() {
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -315,7 +325,6 @@ function drawScene() {
 
 	mvMatrix = mat4();
 
-	//mvMatrix = translate([zoomx, zoomy, zoomz]);
 	var eye = [eyex, eyey, eyez];
 	var at = [atx, aty, atz];
 	var up = [0.0, 1.0, 0.0];
@@ -357,7 +366,7 @@ function drawScene() {
 	}
 
 	mvPushMatrix();
-	//mvMatrix = mult(mvMatrix, rotate(cubeAngle, [cubeanglex, cubeangley, cubeanglez]));
+	if (identitize) mvMatrix = mat4();
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 	gl.vertexAttribPointer(currentProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -374,21 +383,10 @@ function drawScene() {
 
 var lastTime = 0;
 
-function animate() {
-	var timeNow = new Date().getTime();
-	if (lastTime != 0) {
-		var elapsed = timeNow - lastTime;
-
-		cubeAngle += 0.02 * elapsed;
-	}
-	lastTime = timeNow;
-}
-
 
 function tick() {
 	requestAnimFrame(tick);
 	drawScene();
-	animate();
 }
 
 

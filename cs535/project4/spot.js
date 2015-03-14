@@ -221,8 +221,8 @@ function initBuffers() {
 }
 
 var viewpoint_index = 0;
-var eyex = 0.0, eyey = 0.0, eyez = 0.0;
-var atx = 0.0, aty = 0.0, atz = -99999;
+var eyex = 0.0, eyey = 0.75, eyez = 0.5;
+var atx = 0.0, aty = 0.25, atz = -0.5;
 var eye = [eyex, eyey, eyez];
 var at = [atx, aty, atz];
 var up = [0.0, 1.0, 0.0];

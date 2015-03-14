@@ -17,9 +17,11 @@
 
     varying vec3 vTransformedNormal;
     varying vec4 vPosition;
+	varying mat4 mvMatrix;
 
     void main(void) {
         vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+		mvMatrix = uMVMatrix;
         gl_Position = uPMatrix * vPosition;
         vTransformedNormal = uNMatrix * aVertexNormal;
     }
@@ -30,6 +32,7 @@
 
     varying vec3 vTransformedNormal;
     varying vec4 vPosition;
+	varying mat4 mvMatrix;
 
     uniform bool uUseLighting;
 
@@ -49,7 +52,8 @@
         if (!uUseLighting) {
             lightWeighting = vec3(1.0, 1.0, 1.0);
         } else {
-            lightDirection = normalize(uPointLightingAt-vPosition.xyz);
+			vec4 pointLightingAt = mvMatrix * vec4(uPointLightingAt, 1.0);
+            lightDirection = normalize(pointLightingAt.xyz-vPosition.xyz);
 
 			float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
             //lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;

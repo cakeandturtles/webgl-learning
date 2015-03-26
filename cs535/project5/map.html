@@ -1,12 +1,12 @@
-
 <!DOCTYPE html>
 <html>
+<head>
+<title>
+Jake Trower, CS535, Project #5
+</title>
 <style type="text/css">
     canvas { background: blue; }
 </style>
-
-<button id = "OnOffButton">TV On/Off</button>
-
 
 <script id="vertex-shader" type="x-shader/x-vertex">
   attribute  vec4 vPosition;
@@ -40,10 +40,10 @@
   main()
   {
       if (TV_is_on){
-        gl_FragColor = texture2D( texture, fTexCoord );
       }else{
-        gl_FragColor = fColor;
       }
+	  
+	  gl_FragColor = texture2D( texture, fTexCoord );
   }
 </script>
 
@@ -51,12 +51,26 @@
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
 <script type="text/javascript" src="map.js"></script>
-
+</head>
 
 <body>
 <canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
-<img id = "texImage" src = "SA2011_black.gif" hidden></img>
+<br/>
+<button id = "OnOffButton">On/Off</button>
+<button id = "PausePlayButton">Pause/Resume</button>
+<!--&nbsp;&nbsp;&nbsp;&nbsp;
+<button id = "ChannelButton">Change Channel</button>-->
+<br/><br/>
+<button id = "PrevFrameButton">Prev</button>
+<button id = "NextFrameButton">Next</button>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Disable Camera Movement: <input type="checkbox" id="disableCamera"/>
+
+<img id = "tvTexImage" src = "greensky.gif" hidden></img>
+<img id="tvOffTexImage" src="frame_off.gif" hidden></img>
+<img id="woodTexImage" src="wood.gif" hidden></img>
+<img id="carpetTexImage" src="carpet.gif" hidden></img>
 </body>
 </html>

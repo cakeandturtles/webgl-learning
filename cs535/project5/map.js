@@ -1,7 +1,6 @@
 var canvas;
 var gl;
 
-var numVertices  = 36;
 var texSize = 64;
 var program;
 
@@ -10,10 +9,10 @@ var pMatrixUniform;
 
 function TV(){};
 TV.is_on = false;
-
-var pointsArray = [];
-var colorsArray = [];
-var texCoordsArray = [];
+TV.pointsArray = [];
+TV.colorsArray = [];
+TV.texCoordsArray = [];
+TV.numVertices  = 0;
 
 var texture;
 
@@ -22,17 +21,6 @@ var texCoord = [
     vec2(0, 1),
     vec2(1, 1),
     vec2(1, 0)
-];
-
-var vertices = [
-    vec4( -0.5, 0.5,  0.5, 1.0 ),
-    vec4( -0.5,  1.5,  0.5, 1.0 ),
-    vec4( 0.5,  1.5,  0.5, 1.0 ),
-    vec4( 0.5, 0.5,  0.5, 1.0 ),
-    vec4( -0.5, 0.5, -0.5, 1.0 ),
-    vec4( -0.5,  1.5, -0.5, 1.0 ),
-    vec4( 0.5,  1.5, -0.5, 1.0 ),
-    vec4( 0.5, 0.5, -0.5, 1.0 )
 ];
 
 var colors = {
@@ -61,42 +49,55 @@ function configureTexture( image ) {
 }
 
 
-function quad(a, b, c, d) {
-     pointsArray.push(vertices[a]);
-     colorsArray.push(colors['black']);
-     texCoordsArray.push(texCoord[0]);
+TV.quad = function(a, b, c, d) {
+     TV.pointsArray.push(TV.vertices[a]);
+     TV.colorsArray.push(colors['black']);
+     TV.texCoordsArray.push(texCoord[0]);
 
-     pointsArray.push(vertices[b]);
-     colorsArray.push(colors['black']);
-     texCoordsArray.push(texCoord[1]);
+     TV.pointsArray.push(TV.vertices[b]);
+     TV.colorsArray.push(colors['black']);
+     TV.texCoordsArray.push(texCoord[1]);
 
-     pointsArray.push(vertices[c]);
-     colorsArray.push(colors['black']);
-     texCoordsArray.push(texCoord[2]);
+     TV.pointsArray.push(TV.vertices[c]);
+     TV.colorsArray.push(colors['black']);
+     TV.texCoordsArray.push(texCoord[2]);
    
-     pointsArray.push(vertices[a]);
-     colorsArray.push(colors['black']);
-     texCoordsArray.push(texCoord[0]);
+     TV.pointsArray.push(TV.vertices[a]);
+     TV.colorsArray.push(colors['black']);
+     TV.texCoordsArray.push(texCoord[0]);
 
-     pointsArray.push(vertices[c]);
-     colorsArray.push(colors['black']);
-     texCoordsArray.push(texCoord[2]);
+     TV.pointsArray.push(TV.vertices[c]);
+     TV.colorsArray.push(colors['black']);
+     TV.texCoordsArray.push(texCoord[2]);
 
-     pointsArray.push(vertices[d]);
-     colorsArray.push(colors['black']);
-     texCoordsArray.push(texCoord[3]);
+     TV.pointsArray.push(TV.vertices[d]);
+     TV.colorsArray.push(colors['black']);
+     TV.texCoordsArray.push(texCoord[3]);
 }
 
 
 TV.initialize = function()
 {
+    TV.vertices = [
+      vec4( -0.5, 0.5,  0.5, 1.0 ),
+      vec4( -0.5,  1.5,  0.5, 1.0 ),
+      vec4( 0.5,  1.5,  0.5, 1.0 ),
+      vec4( 0.5, 0.5,  0.5, 1.0 ),
+      vec4( -0.5, 0.5, -0.5, 1.0 ),
+      vec4( -0.5,  1.5, -0.5, 1.0 ),
+      vec4( 0.5,  1.5, -0.5, 1.0 ),
+      vec4( 0.5, 0.5, -0.5, 1.0 )
+    ];
+  
     //INITIALIZE TV VERTICES
-    quad( 1, 0, 3, 2 );
-    quad( 2, 3, 7, 6 );
-    quad( 3, 0, 4, 7 );
-    quad( 6, 5, 1, 2 );
-    quad( 4, 5, 6, 7 );
-    quad( 5, 4, 0, 1 );
+    TV.quad( 1, 0, 3, 2 );
+    TV.quad( 2, 3, 7, 6 );
+    TV.quad( 3, 0, 4, 7 );
+    TV.quad( 6, 5, 1, 2 );
+    TV.quad( 4, 5, 6, 7 );
+    TV.quad( 5, 4, 0, 1 );
+    
+    TV.numVertices  = TV.pointsArray.length;
     
     // Initialize a texture
     //var image = new Image();
@@ -134,7 +135,7 @@ window.onload = function init() {
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(TV.colorsArray), gl.STATIC_DRAW );
     
     var vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
@@ -142,7 +143,7 @@ window.onload = function init() {
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(TV.pointsArray), gl.STATIC_DRAW );
     
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
@@ -150,7 +151,7 @@ window.onload = function init() {
     
     var tBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(TV.texCoordsArray), gl.STATIC_DRAW );
     
     var vTexCoord = gl.getAttribLocation( program, "vTexCoord" );
     gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0 );
@@ -189,6 +190,6 @@ var render = function(){
     gl.uniformMatrix4fv(mvMatrixUniform, false, flatten(mvMatrix));
     gl.uniformMatrix4fv(pMatrixUniform, false, flatten(pMatrix));
     
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );
+    gl.drawArrays( gl.TRIANGLES, 0, TV.numVertices );
     requestAnimFrame(render);
 }

@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>TODO</title>
+<title>Jake Trower, CS535, Project #4</title>
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
@@ -38,10 +38,11 @@
 
     uniform vec3 uAmbientColor;
 
-	uniform vec3 uPointLightingEye;
-    uniform vec3 uPointLightingAt;
-    uniform vec3 uPointLightingColor;
-	uniform float uPointLightingAngle;
+	uniform vec3 uSpotlightLocation;
+	uniform vec3 uSpotlightAt;
+	uniform float uSpotlightAngleCos;
+	uniform float uSpotlightExp;
+    uniform vec3 uSpotlightColor;
 
     uniform sampler2D uSampler;
 
@@ -49,27 +50,57 @@
     void main(void) {
         vec3 lightWeighting;
 		vec3 lightDirection;
+		vec4 color;
         if (!uUseLighting) {
-            lightWeighting = vec3(1.0, 1.0, 1.0);
+            color = vec4(1.0, 1.0, 1.0, 1.0);
         } else {
-			vec4 pointLightingAt = mvMatrix * vec4(uPointLightingAt, 1.0);
-            lightDirection = normalize(pointLightingAt.xyz-vPosition.xyz);
-
-			float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
-            //lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
-			lightWeighting = vec3(1.0, 1.0, 1.0) * directionalLightWeighting;
+			//rotate the light position and direction coordinates based on MVMatrix
+			vec4 spotlightEye = mvMatrix * vec4(uSpotlightLocation, 1.0);
+			vec4 spotlightAt = mvMatrix * vec4(uSpotlightAt, 1.0);
+			//calculate the direction vector from light source to at position
+			vec3 spotlightDir = vec3(spotlightAt.xyz - spotlightEye.xyz);
+			//now, calculate direction vector from light source to wall coordinate
+			vec3 lightDir = vec3(spotlightEye.xyz - vPosition.xyz);
+			//compute the dot product between normal and lightdir
+			float NdotL = max(dot(normalize(vTransformedNormal), normalize(lightDir)), 0.0);
+			
+			//IF WE'RE NOT IN THE SPOTLIGHT (the two if statements below aren't both true
+			//then let's apply a light direction on the ambient lighting so that the rest of the 
+			//room is lit somewhat better looking
+			color = vec4(uAmbientColor * NdotL, 1.0);
+			
+			//determine if pixel is affected by spotlight
+			if (NdotL > 0.0){
+				float spotEffect = dot(normalize(spotlightDir), normalize(-lightDir));
+				//if the pixel is within the spotlight cutoff angle from center
+				if (spotEffect > uSpotlightAngleCos){
+					//decay the spotlight based on the exp factor (spotlightExp in spot.js)
+					spotEffect = pow(spotEffect, uSpotlightExp);
+					
+					color = vec4(uAmbientColor + (spotEffect * (uSpotlightColor * NdotL)), 1.0);
+				}
+			}
         }
-
-        vec4 fragmentColor;
-        fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
-        gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
+		
+        gl_FragColor = color;
     }
 </script>
 
 </head>
 
 
-<body onload="webGLStart();">
+<body>
+	<input type="submit" id="lightUp" value="Light Up"></input>
+	<input type="submit" id="lightDown" value="Light Down"></input>
+	<input type="submit" id="lightLeft" value="Light Left"></input>
+	<input type="submit" id="lightRight" value="Light Right"></input>
+	<br/>
+	<input type="submit" id="angleUp" value="Angle Up"></input>
+	<input type="submit" id="angleDown" value="Angle Down"></input>
+	<br/>
+	<input type="submit" id="viewLeft" value="View Left"></input>
+	<input type="submit" id="viewRight" value="View Right"></input>
+	<br/>
     <canvas id="displaycanvas" style="border: none;" width="500" height="500"></canvas>
     <br/>
 
@@ -81,9 +112,9 @@
     <table style="border: 0; padding: 10px;">
         <tr>
             <td><b>Colour:</b>
-            <td>R: <input type="text" id="pointR" value="0.8" />
-            <td>G: <input type="text" id="pointG" value="0.8" />
-            <td>B: <input type="text" id="pointB" value="0.8" />
+            <td>R: <input type="text" id="pointR" value="1.0" />
+            <td>G: <input type="text" id="pointG" value="0.6" />
+            <td>B: <input type="text" id="pointB" value="0.6" />
         </tr>
     </table>
 
@@ -92,7 +123,7 @@
     <table style="border: 0; padding: 10px;">
         <tr>
             <td><b>Colour:</b>
-            <td>R: <input type="text" id="ambientR" value="0.2" />
+            <td>R: <input type="text" id="ambientR" value="0.1" />
             <td>G: <input type="text" id="ambientG" value="0.2" />
             <td>B: <input type="text" id="ambientB" value="0.2" />
         </tr>

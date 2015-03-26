@@ -1,3 +1,42 @@
+/*
+	CS535, Project #4, Jake Trower
+	JavaScript to control the webgl canvas of the spotlight project!!
+	
+	Sets up webgl, shaders (specified in html), and buffers (for shader variables)
+	Sets up button click handlers to manipulate the light and camera variables
+	Manipulates light and camera variables and sends them to the shader program
+*/
+
+window.onload = function webGLStart() {
+	var canvas = document.getElementById("displaycanvas");
+	initGL(canvas);
+	initShaders();
+	initBuffers();
+
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.enable(gl.DEPTH_TEST);
+	
+	//set up event handlers
+	document.getElementById("lightUp").onclick = lightUp;
+	document.getElementById("lightDown").onclick = lightDown;
+	document.getElementById("lightLeft").onclick = lightLeft;
+	document.getElementById("lightRight").onclick = lightRight;
+	
+	document.getElementById("angleUp").onclick = function(){
+		spotlightAngle++;
+		var max = 45;
+		if (spotlightAngle > max) spotlightAngle = max;
+	}
+	document.getElementById("angleDown").onclick = function(){
+		spotlightAngle--;
+		if (spotlightAngle < 1) spotlightAngle = 1;
+	}
+	
+	document.getElementById("viewLeft").onclick = viewLeft;
+	document.getElementById("viewRight").onclick = viewRight;
+
+	tick();
+}
 
 var gl;
 
@@ -76,8 +115,6 @@ function createProgram(fragmentShaderID, vertexShaderID) {
 	program.samplerUniform = gl.getUniformLocation(program, "uSampler");
 	program.useLightingUniform = gl.getUniformLocation(program, "uUseLighting");
 	program.ambientColorUniform = gl.getUniformLocation(program, "uAmbientColor");
-	program.pointLightingAtUniform = gl.getUniformLocation(program, "uPointLightingAt");
-	program.pointLightingColorUniform = gl.getUniformLocation(program, "uPointLightingColor");
 
 	return program;
 }
@@ -221,18 +258,23 @@ function initBuffers() {
 }
 
 var viewpoint_index = 0;
+var lightpoint_index = 0;
+var lightpointvert_index = 1;
 var eyex = 0.0, eyey = 0.75, eyez = 0.5;
 var atx = 0.0, aty = 0.25, atz = -0.5;
 var eye = [eyex, eyey, eyez];
 var at = [atx, aty, atz];
 var up = [0.0, 1.0, 0.0];
 var lightAtX = 0.0;
-var lightAtY = 0.25;
-var lightAtZ = 0.0;
+var lightAtY = 0.51;
+var lightAtZ = -0.5;
 var lightEyeX = 0.0;
 var lightEyeY = 0.75;
 var lightEyeZ = 0.0;
 var lightAngle = 10; //degrees
+
+var spotlightAngle = 15;
+var spotlightExp = 15;
 
 
 function viewLeft(){
@@ -261,15 +303,15 @@ function setViewpoint(){
 			break;
 		case 1:
 			eyez = 0.5;
-			eyex = 0.5;
+			eyex = -0.5;
 			break;
 		case 2:
 			eyez = 0.0;
-			eyex = 0.5;
+			eyex = -0.5;
 			break;
 		case 3:
 			eyez = -0.5;
-			eyex = 0.5;
+			eyex = -0.5;
 			break;
 		case 4:
 			eyez = -0.5;
@@ -277,19 +319,98 @@ function setViewpoint(){
 			break;
 		case 5:
 			eyez = -0.5;
-			eyex = -0.5;
+			eyex = 0.5;
 			break;
 		case 6:
 			eyez = 0.0;
-			eyex = -0.5;
+			eyex = 0.5;
 			break;
 		case 7:
-			eyez = -0.5;
-			eyex = -0.5;
+			eyez = 0.5;
+			eyex = 0.5;
 			break;
 	}
 	atx = -eyex;
 	atz = -eyez;
+}
+
+function lightUp(){
+	lightpointvert_index--;
+	if (lightpointvert_index < 0) lightpointvert_index = 0;
+	setLightpointVert();
+}
+
+function lightDown(){
+	lightpointvert_index++;
+	if (lightpointvert_index > 2) lightpointvert_index = 2;
+	setLightpointVert();
+}
+
+function setLightpointVert(){
+	switch (lightpointvert_index){
+		case 0:
+			lightAtY = 0.626;
+			break;
+		case 1:
+			lightAtY = 0.51;
+			break;
+		case 2:
+			lightAtY = 0.375;
+			break;
+	}
+}
+
+function lightLeft(){
+	lightpoint_index--;
+	if (lightpoint_index < 0){
+		lightpoint_index = 7;
+	}
+	setLightpoint();
+}
+
+function lightRight(){
+	lightpoint_index++;
+	if (lightpoint_index > 7){
+		lightpoint_index = 0;
+	}
+	setLightpoint();
+}
+
+function setLightpoint(){
+	switch(lightpoint_index){
+		case 0:
+			lightAtZ = -0.5;
+			lightAtX = 0.0;
+			break;
+		case 1:
+			lightAtZ = -0.5;
+			lightAtX = 0.5;
+			break;
+		case 2:
+			lightAtZ = 0.0;
+			lightAtX = 0.5;
+			break;
+		case 3:
+			lightAtZ = 0.5;
+			lightAtX = 0.5;
+			break;
+		case 4:
+			lightAtZ = 0.5;
+			lightAtX = 0.0;
+			break;
+		case 5:
+			lightAtZ = 0.5;
+			lightAtX = -0.5;
+			break;
+		case 6:
+			lightAtZ = 0.0;
+			lightAtX = -0.5;
+			break;
+		case 7:
+			lightAtZ = -0.5;
+			lightAtX = -0.5;
+			break;
+	}
 }
 
 function drawScene() {
@@ -311,30 +432,32 @@ function drawScene() {
 	var lighting = document.getElementById("lighting").checked;
 	gl.uniform1i(currentProgram.useLightingUniform, lighting);
 	if (lighting) {
-		var lightAt = [lightAtX, lightAtY, lightAtZ];
-		
 		gl.uniform3f(
 			currentProgram.ambientColorUniform,
 			parseFloat(document.getElementById("ambientR").value),
 			parseFloat(document.getElementById("ambientG").value),
 			parseFloat(document.getElementById("ambientB").value)
 		);
-
+		
 		gl.uniform3f(
-			currentProgram.pointLightingAtUniform, lightAt[0], lightAt[1], lightAt[2]
+			gl.getUniformLocation(currentProgram, "uSpotlightLocation"),
+			lightEyeX, lightEyeY, lightEyeZ
 		);
 		
 		gl.uniform3f(
-			gl.getUniformLocation(currentProgram, "uPointLightingEye"),
-			lightEyeX, lightEyeY, lightEyeZ
+			gl.getUniformLocation(currentProgram, "uSpotlightAt"),
+			lightAtX, lightAtY, lightAtZ
 		);
 
 		gl.uniform3f(
-			currentProgram.pointLightingColorUniform,
+			gl.getUniformLocation(currentProgram, "uSpotlightColor"),
 			parseFloat(document.getElementById("pointR").value),
 			parseFloat(document.getElementById("pointG").value),
 			parseFloat(document.getElementById("pointB").value)
 		);
+		
+		gl.uniform1f(gl.getUniformLocation(currentProgram, "uSpotlightAngleCos"), Math.cos(degToRad(spotlightAngle)));
+		gl.uniform1f(gl.getUniformLocation(currentProgram, "uSpotlightExp"), spotlightExp);
 	}
 
 	mvPushMatrix();
@@ -360,30 +483,7 @@ function tick() {
 	drawScene();
 }
 
-
-function webGLStart() {
-	var canvas = document.getElementById("displaycanvas");
-	initGL(canvas);
-	initShaders();
-	initBuffers();
-
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	gl.enable(gl.DEPTH_TEST);
-
-	tick();
-}
-
 //matrix utility function
-function vector3Matrix3Mult(v3, m3){
-	var result = [0, 0, 0];
-	for (var i = 0; i < 3; i++){
-		for (var j = 0; j < 3; j++){
-			result[i] += v3[j]*m3[j][i];
-		}
-	}
-	return result;
-}
-
 function Mat4toInverseMat3(m4,m3){
 	var m00 = m4[0][0], 
 		m01 = m4[0][1], 

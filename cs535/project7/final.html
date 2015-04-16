@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>
+Jake Trower,CS535,Project #6
+</title>
+<style type="text/css">
+    canvas { background: blue; }
+</style>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+  attribute vec3 aVertexPosition;
+  attribute vec3 aVertexNormal;
+  attribute vec2 aTextureCoord;
+  
+  uniform mat4 uMVMatrix;
+  uniform mat4 uPMatrix;
+  uniform mat3 uNMatrix;
+  
+  varying vec2 vTextureCoord;
+  varying vec3 vTransformedNormal;
+  varying vec4 vPosition;
+  
+  void main(void){
+	vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+	gl_Position = uPMatrix * vPosition;
+	vTextureCoord = aTextureCoord;
+	vTransformedNormal = uNMatrix * aVertexNormal;
+  }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+  precision mediump float;
+  
+  varying vec2 vTextureCoord;
+  varying vec3 vTransformedNormal;
+  varying vec4 vPosition;
+  
+  uniform sampler2D uSampler;
+  
+  void main(void){
+	gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+  }
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="final.js"></script>
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<br/>
+<img id="metalImg" src="metal.jpg" hidden/>
+<img id="bgImg" src="bg.bmp" hidden/>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>triangles</title>
+        <script src="processing.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas"/>
+<script>
+var x, y, z;
+var rotY;
+var canvas = document.getElementById("canvas");
+var rgbs;
+// attaching the processing function to the canvas
+var processingInstance = new Processing(canvas, function(p){
+    p.setup = function(){
+        p.size(200,200,p.P3D);
+        x = p.width/2;
+        y = p.height/2;
+        z = 0;
+        rotY = 0;
+        p.colorMode(p.RGB, 1);
+        
+        rgbs = [
+            [Math.random(), Math.random(), Math.random()],
+            [Math.random(), Math.random(), Math.random()],
+            [Math.random(), Math.random(), Math.random()],
+        ];
+    }
+    
+    p.draw = function(){
+        p.background(0, 0, 0);
+        
+        p.translate(x,y,z);
+        rotY += 0.02;
+        p.rotateY(rotY);
+        
+        p.noStroke();
+        p.beginShape();
+        
+        var s = 30;
+        var h = s*Math.sqrt(3)/2;
+        
+        p.fill(rgbs[0][0], rgbs[0][1], rgbs[0][2]); 
+        p.vertex(-s, h, 0);
+        p.fill(rgbs[1][0], rgbs[1][1], rgbs[1][2]); 
+        p.vertex(s, h, 0);
+        p.fill(rgbs[2][0], rgbs[2][1], rgbs[2][2]); 
+        p.vertex(0, -h, 0);
+        p.fill(rgbs[0][0], rgbs[0][1], rgbs[0][2]); 
+        p.vertex(-s, h, 0);
+        
+        p.endShape();
+        
+    }
+});
+    
+</script>
+    </body>
+</html>

@@ -2,28 +2,40 @@
     <head>
         <title>pyarmid</title>
         <script src="processing.js"></script>
+        <script src="Shape.js"></script>
     </head>
     <body>
-        <canvas id="canvas"/>
+    <canvas id="canvas"></canvas><br/><br/>
+    <input type="button" id="random_color" value="randomize colors"/><br/><br/>
+    <input type="button" id="start_wiggle" value="start wiggle"/>
+    <input type="button" id="stop_wiggle" value="stop wiggle"/>
 <script>
 var x, y, z;
-var rotX, rotY;
 var canvas = document.getElementById("canvas");
-var rgbs;
+var shape;
 
-var vert = function(x, y, z){
-    this.x = x; this.base_x = x;
-    this.y = y; this.base_y = y;
-    this.z = z; this.base_z = z;
-    
-    this.r = Math.random(); 
-    this.g = Math.random();
-    this.b = Math.random();
+document.getElementById("random_color").onclick = function(e){
+    shape.RandomColors();
 }
-vert.prototype.update = function(){
-    this.x += Math.random() - 0.5;
-    this.y += Math.random() - 0.5;
-    this.z += Math.random() - 0.5;
+document.getElementById("start_wiggle").onclick = function(e){
+    shape.StartWiggle();
+}
+document.getElementById("stop_wiggle").onclick = function(e){
+    shape.StopWiggle();
+}
+document.body.onkeydown = function(e){
+    if (e.keyCode === 37){ //LEFT
+        shape.rotation_delta[1] -= 0.01
+    }
+    if (e.keyCode === 39){ //RIGHT
+        shape.rotation_delta[1] += 0.01
+    }
+    if (e.keyCode === 38){ //UP
+        shape.rotation_delta[0] += 0.01
+    }
+    if (e.keyCode === 40){ //DOWN
+        shape.rotation_delta[0] -= 0.01
+    }
 }
 
 // attaching the processing function to the canvas
@@ -37,45 +49,38 @@ var processingInstance = new Processing(canvas, function(p){
         rotY = 0;
         p.colorMode(p.RGB, 1);
         
+        
         var s = 30;
-        verts = [
-            [new vert(-s, -s, -s),
-             new vert(s, -s, -s),
-             new vert(0, 0, s)],
-            [new vert(s, -s, -s),
-             new vert(s, s, -s),
-             new vert(0, 0, s)],
-            [new vert(s, s, -s),
-             new vert(-s, s, -s),
-             new vert(0, 0, s)],
-            [new vert(-s, s, -s),
-             new vert(-s, -s, -s),
-             new vert(0, 0, s)]
-        ];
+        shape = new Shape(x, y, z);
+        //construct the shape (pyramid)
+        var v1 = shape.addVertex(0, 0, s);
+        var v2 = shape.addVertex(s, -s, -s);
+        var v3 = shape.addVertex(-s, -s, -s);
+        var v4 = shape.addVertex(s, s, -s);
+        var v5 = shape.addVertex(-s, s, -s);
+        
+        //link base to top
+        shape.linkVertex(v1, v2);
+        shape.linkVertex(v1, v3);
+        shape.linkVertex(v1, v4);
+        shape.linkVertex(v1, v5);
+        
+        //link bases together
+        shape.linkVertex(v2, v3);
+        shape.linkVertex(v2, v4);
+        shape.linkVertex(v3, v5);
+        shape.linkVertex(v4, v5);
     }
     
     p.draw = function(){
+        shape.update();        
+
+
         p.background(0, 0, 0);
         
-        p.translate(x,y,z);
-        rotX += 0.02;
-        rotY += 0.01;
-        p.rotateX(rotX);
-        p.rotateY(rotY);
-        
         p.noFill();
-        p.beginShape();
+        shape.draw(p);
         
-        for (var i = 0; i < verts.length; i++){
-            for (var j = 0; j < verts[i].length; j++){
-                var v = verts[i][j];
-                v.update();
-                p.stroke(v.r, v.g, v.b);
-                p.vertex(v.x, v.y, v.z);
-            }
-        }
-        
-        p.endShape();
         
     }
 });

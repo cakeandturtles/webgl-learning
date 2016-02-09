@@ -1,3 +1,7 @@
+https://jakeonaut-learning.github.io/webgl-learning/README.txt
+https://jakeonaut-learning.github.io/webgl-learning/processingjs/index.html
+https://jakeonaut-learning.github.io/webgl-learning/learningwebgl/index.html
+
 -=[ beetle ]=- 6/99
 
                 ,_    /) (\    _,

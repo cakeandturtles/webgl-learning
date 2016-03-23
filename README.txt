@@ -1,6 +1,6 @@
-https://jakeonaut-learning.github.io/webgl-learning/README.txt
-https://jakeonaut-learning.github.io/webgl-learning/processingjs/
-https://jakeonaut-learning.github.io/webgl-learning/learningwebgl/
+https://graveyard-of-dreams.github.io/webgl-learning/README.txt
+https://graveyard-of-dreams.github.io/webgl-learning/processingjs/
+https://graveyard-of-dreams.github.io/webgl-learning/learningwebgl/
 
 -=[ beetle ]=- 6/99
 

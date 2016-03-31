@@ -1,0 +1,72 @@
+<html>
+<head>
+    <title>blender</title>
+    <script src="processing.js"></script>
+    <script src="BlenderShape.js"></script>
+</head>
+<body>
+    <canvas id="canvas"></canvas><br/><br/>
+    press arrow keys to rotate shape
+    <script>
+    var canvas = document.getElementById("canvas");
+    var shape;
+
+    document.body.onkeydown = function(e){
+        if (e.keyCode === 37){ //LEFT
+            shape.rotation_delta[1] -= 0.01
+        }
+        if (e.keyCode === 39){ //RIGHT
+            shape.rotation_delta[1] += 0.01
+        }
+        if (e.keyCode === 38){ //UP
+            shape.rotation_delta[0] += 0.01
+        }
+        if (e.keyCode === 40){ //DOWN
+            shape.rotation_delta[0] -= 0.01
+        }
+    }
+
+
+    function readTextFile(file, callback){
+        var rawFile = new XMLHttpRequest();
+        rawFile.open("GET", file, false);
+        rawFile.onreadystatechange = function ()
+        {
+            if(rawFile.readyState === 4)
+            {
+                if(rawFile.status === 200 || rawFile.status == 0)
+                {
+                    var allText = rawFile.responseText;
+                    callback(allText);
+                }
+            }
+        }
+        rawFile.send(null);
+    }
+
+    var processingInstance;
+    window.onload = function(){
+        readTextFile("snake.ply", function(ply){
+            // attaching the processing function to the canvas
+            processingInstance = new Processing(canvas, function(p){
+                p.setup = function(){
+                    p.size(400,400,p.P3D);
+                    p.colorMode(p.RGB, 1);
+
+                    shape = Shape.createFromPly(p.width/2, p.height/2, 0, ply);
+                }
+
+                p.draw = function(){
+                    shape.update();
+
+                    p.background(0, 0, 0);
+                    p.noFill();
+                    shape.draw(p);
+                }
+            });
+        });
+    }
+
+    </script>
+</body>
+</html>

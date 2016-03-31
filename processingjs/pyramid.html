@@ -52,6 +52,7 @@ var processingInstance = new Processing(canvas, function(p){
         
         var s = 30;
         shape = new Shape(x, y, z);
+        shape.wiggle = false;
         //construct the shape (pyramid)
         var v1 = shape.addVertex(0, 0, s);
         var v2 = shape.addVertex(s, -s, -s);

@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <title>lights</title>
+        <script src="processing.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas"/>
+<script>
+function radians(deg){
+    return deg / Math.PI;
+}
+
+var canvas = document.getElementById("canvas");
+// attaching the processing function to the canvas
+var processingInstance = new Processing(canvas, function(p){
+    p.setup = function(){
+        p.size(450,200,p.P3D);
+        p.noStroke();
+    }
+
+    p.draw = function(){
+        p.background(245, 238, 184);
+        p.fill(246, 225, 65);
+
+        p.lights();
+
+        p.pushMatrix();
+        p.translate(p.width/3, p.height/2);
+        p.rotateY(radians(p.frameCount));
+        p.rotateX(Math.PI/6);
+        p.box(50);
+        p.popMatrix();
+
+        p.pushMatrix();
+        p.translate(p.width/2 + p.width/4, p.height/2);
+        p.rotateY(radians(p.frameCount));
+        p.sphere(30);
+        p.popMatrix();
+    }
+});
+
+</script>
+    </body>
+</html>

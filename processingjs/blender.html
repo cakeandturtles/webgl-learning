@@ -46,21 +46,23 @@
 
     var processingInstance;
     window.onload = function(){
-        readTextFile("snake.ply", function(ply){
+        readTextFile("pyramid.ply", function(ply){
             // attaching the processing function to the canvas
             processingInstance = new Processing(canvas, function(p){
                 p.setup = function(){
                     p.size(400,400,p.P3D);
-                    p.colorMode(p.RGB, 1);
+                    p.noStroke();
 
                     shape = Shape.createFromPly(p.width/2, p.height/2, 0, ply);
                 }
 
                 p.draw = function(){
                     shape.update();
+                    p.noStroke();
 
                     p.background(0, 0, 0);
-                    p.noFill();
+                    p.lights();
+
                     shape.draw(p);
                 }
             });

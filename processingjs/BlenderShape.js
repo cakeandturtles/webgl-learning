@@ -70,7 +70,7 @@ Shape.createFromPly = function(x, y, z, ply){
         //iterate over all the element types
         for (var n = 0; n < element.amount; n++){
             var line = lines[i].split(" "); i++;
-            line.map(parseInt);
+            line = line.map(Number);
 
             if (element.type === "vertex"){
                 shape.addVertex(line[0], line[1], line[2],
@@ -104,6 +104,8 @@ Shape.Vertex = function(x, y, z, nx, ny, nz, r, g, b){
     this.b = b || 255;
 }
 Shape.Vertex.prototype.draw = function(p){
-    p.stroke(this.r, this.g, this.b);
+    p.fill(this.r, this.g, this.b);
+
+    p.normal(this.nx, this.ny, this.nz);
     p.vertex(this.x, this.y, this.z);
 }

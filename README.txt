@@ -1,6 +1,6 @@
-https://graveyard-of-dreams.github.io/webgl-learning/README.txt
-https://graveyard-of-dreams.github.io/webgl-learning/processingjs/
-https://graveyard-of-dreams.github.io/webgl-learning/learningwebgl/
+https://cakeandturtles.github.io/webgl-learning/README.txt
+https://cakeandturtles.github.io/webgl-learning/processingjs/
+https://cakeandturtles.github.io/webgl-learning/learningwebgl/
 
 -=[ beetle ]=- 6/99
 
